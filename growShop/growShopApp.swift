@@ -9,9 +9,11 @@ import SwiftUI
 
 @main
 struct growShopApp: App {
+    @State private var stock = GroceryStore()
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(stock)
         }
     }
 }
