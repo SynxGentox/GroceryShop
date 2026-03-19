@@ -22,7 +22,7 @@ struct GroceryItem: Identifiable {
     var imageName: String
 }
 
-enum Categories: String {
+enum Categories: String, CaseIterable {
     case fruits     = "Fruits"
     case veggies  = "Veggies"
     case dairy      = "Dairy"
@@ -122,15 +122,12 @@ class GroceryStore {
             imageName: "image 15"
         )
     ]
-
-    var fruits: [GroceryItem] {
-        allItems.filter { $0.category == Categories.fruits.rawValue }
-    }
-    var veggies: [GroceryItem] {
-        allItems.filter { $0.category == Categories.veggies.rawValue }
-    }
-    var dairy: [GroceryItem] {
-        allItems.filter { $0.category == Categories.dairy.rawValue }
+    
+    func selectedCategory(cat: String?) -> [GroceryItem] {
+        guard let selectedCategory = cat else {
+            return allItems
+        }
+        return allItems.filter { $0.category == selectedCategory }
     }
     
     private(set) var cart: [UUID: Int] = [:]
@@ -167,18 +164,26 @@ struct ContentView: View {
     let columns: [GridItem] = [GridItem(.flexible(), spacing: 10),
                                GridItem(.flexible(), spacing: 10)
     ]
-    @Environment(GroceryStore.self) private var stock
+    @Environment(GroceryStore.self) private var store
     @State private var isTapped: Bool = false
+    @State var selectedCategory: String? = nil
     
     var body: some View {
         NavigationStack {
             ZStack {
+                Color.green.opacity(0.5)
+                    .ignoresSafeArea(edges: .all)
                 VStack {
                     ScrollView{
                         LazyVGrid(columns: columns) {
-                            ForEach(stock.allItems) { item in
-                                NavigationLink(destination: ItemDetailView()) {
+                            ForEach(
+                                store.selectedCategory(cat: selectedCategory)
+                            ) { item in
+                                NavigationLink(
+                                    destination: ItemDetailView()
+                                ) {
                                     ItemCard(
+                                        item: item,
                                         imageName: item.imageName,
                                         name: item.name,
                                         price: item.price
@@ -193,34 +198,29 @@ struct ContentView: View {
                 VStack{
                     VStack {
                         if !isTapped {
-                            FilterBar(filter: $isTapped)
-                                .contentShape(Capsule())
-                                .onTapGesture {
-                                    withAnimation(.spring){
-                                        isTapped.toggle()
-                                    }
-                                }
-                        } else {
-                            FilterBar(filter: $isTapped)
-                                .contentShape(Capsule())
-                                .onTapGesture {
-                                    withAnimation(.spring){
-                                        isTapped.toggle()
-                                    }
-                                }
-                            ExpendedFilter(
-                                emoji: "🍎",
-                                category: Categories.fruits.rawValue
+                            FilterBar(
+                                selectedCategory: $selectedCategory, filter: $isTapped
                             )
+                            .contentShape(Capsule())
+                            .onTapGesture {
+                                withAnimation(.spring){
+                                    isTapped.toggle()
+                                }
+                            }
                                 
-                            ExpendedFilter(
-                                emoji: "🍆",
-                                category: Categories.veggies.rawValue
-                            )
-                            ExpendedFilter(
-                                emoji: "🥛",
-                                category: Categories.dairy.rawValue
-                            )
+                        } else {
+                            HStack{
+                                FilterBar(
+                                    selectedCategory: $selectedCategory, filter: $isTapped
+                                )
+                                .contentShape(Capsule())
+                                .onTapGesture {
+                                    withAnimation(.spring){
+                                        isTapped.toggle()
+                                        
+                                    }
+                                }
+                            }
                         }
                     }
                     .frame(maxWidth: .infinity,alignment: .leading)
@@ -232,126 +232,112 @@ struct ContentView: View {
                 }
                 .padding(.horizontal)
             }
-            .navigationTitle("Grocery Store").background(.green.opacity(0.5))
-            
+            .toolbar {
+                Image(systemName: "person.crop.circle.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 26, height: 26)
+            }
         }
     }
 }
 
 struct ItemCard: View {
+    @Environment(GroceryStore.self) private var store
+    let item: GroceryItem
     let imageName: String
     let name: String
     let price: Int
+    
     var body: some View {
         ZStack{
-            RoundedRectangle(cornerRadius: 50)
+            RoundedRectangle(cornerRadius: 27)
                 .fill(Color(UIColor.systemGray6))
-            VStack(alignment: .leading) {
+            VStack {
                 Image(systemName: "apple.logo")
                     .resizable()
                     .scaledToFit()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .frame(maxWidth: 200, maxHeight: 200)
                     .foregroundStyle(.red)
-                    .shadow(radius: 20,x: 10,y: 7)
-                    .padding(.top, 200/7)
-                Spacer()
-                VStack(alignment: .leading) {
-                    Text(name)
-                        .font(
-                            .system(
-                                size: 200/9,
-                                weight: .semibold,
-                                design: .rounded
-                            )
-                        )
-                    Text(price, format: .number)
+                    .shadow(radius: 17,x: 10,y: 10)
+                    .padding(.top, 17)
+                
+                VStack(alignment: .leading){
+                    HStack {
+                        Button{
+                            store.removeFromCart(item: item)
+                        } label: {
+                            Image(systemName: "minus")
+                        }
+                        Text(store.quantity(of: item), format: .number)
+                        Button{
+                            store.addToCart(item: item)
+                        } label: {
+                            Image(systemName: "plus")
+                        }
+                    }
+                    .labelStyle(17)
+                    .padding(.horizontal, 24)
+                    
+                    HStack {
+                        Text(name)
+                            .padding(.leading, 26)
+                        Spacer()
+                        Text(price, format: .number)
+                            .padding(.trailing,26)
+                    }
+                    .labelStyle(17)
+                    .padding(.bottom, 17)
                 }
-                .foregroundStyle(Color(UIColor.label))
-                .shadow(radius: 10)
-                .padding(.leading, 200/7)
-                .padding(.vertical, 200/13)
             }
+            .frame(maxWidth: .infinity,maxHeight: 240)
         }
-        
-        .frame(maxWidth: .infinity,maxHeight: 200*1.25)
     }
 }
 
 struct FilterBar: View {
+    @Binding var selectedCategory: String?
+    @Environment(GroceryStore.self) private var store
     @Binding var filter: Bool
-    var body: some View {
-        ZStack{
-            if !filter {
-                HStack{
-                    Image(systemName: "slider.horizontal.3")
-                        .resizable()
-                        .scaledToFit()
-                        .foregroundStyle(Color(UIColor.label))
-                        .shadow(radius: 10)
-                        .padding([.leading,.vertical])
-                    Text("Filter")
-                        .font(
-                            .system(
-                                size: (200*1.333)/13,
-                                weight: .semibold,
-                                design: .rounded
-                            )
-                        )
-                        .foregroundStyle(Color(UIColor.label))
-                        .padding(.trailing,20)
-                        .shadow(radius: 10)
-                }
-                .frame(width: 200/1.618,height: (200*1.333)/5)
-                .glassEffect(
-                    .regular.interactive().tint(Color.green.opacity(0.5))
-                )
-                
-            }
-            else {
-                Image(systemName: "xmark")
-                    .resizable()
-                    .scaledToFit()
-                    .shadow(radius: 10)
-                    .padding()
-                    .frame(width: 200/1.618,height: (200*1.333)/5)
-                    .glassEffect(
-                        .regular.interactive().tint(Color.green.opacity(0.5))
-                    )            }
-        }
-    }
-}
-
-struct ExpendedFilter: View {
-    let emoji: String
-    let category: String
     
     var body: some View {
-        ZStack {
-            Capsule(style: .continuous)
-                .fill(.clear)
+        VStack{
             HStack{
-                Text(emoji)
-                    .shadow(radius: 10)
-                    .padding(.top,12)
-                    .padding(.bottom,15)
-                    .padding(.horizontal)
-                    .foregroundStyle(Color(UIColor.label))
-                    .shadow(radius: 10)
-                Text(category)
-                    .font(
-                        .system(
-                            size: (200*1.333)/13,
-                            weight: .semibold,
-                            design: .rounded
-                        )
-                    )
-                    .foregroundStyle(Color(UIColor.label))
-                    .padding(.trailing, 20)
-                    .shadow(radius: 10)
+                if !filter {
+                    Image(systemName: "slider.horizontal.3")
+                    Text("Filter")
+                }
+                else {
+                    Image(systemName: "xmark")
+                }
+            }
+            .labelStyle(20)
+            .backgroundStyle(width: 115,height: 47)
+            if filter {
+                Text("All")
+                    .labelStyle(20)
+                    .backgroundStyle(width: 115,height: 47)
+                    .onTapGesture {
+                        selectedCategory = nil
+                        withAnimation(.spring) {
+                                filter = false  // close filter panel after selection
+                            }
+                    }
+                
+                    
+                ForEach(Categories.allCases, id: \.self) { category in
+                    Text(category.rawValue)
+                        .labelStyle(20)
+                        .backgroundStyle(width: 115,height: 47)
+                        .onTapGesture {
+                            selectedCategory = category.rawValue
+                            withAnimation(.spring) {
+                                    filter = false  // close filter panel after selection
+                                }
+                        }
+                }
             }
         }
-        .frame(width: 200/1.25,height: (200*1.333)/5)
-        .glassEffect(.regular.interactive().tint(Color.green.opacity(0.5)))
     }
 }
 
@@ -362,33 +348,51 @@ struct CartButton: View {
                 .fill(.clear)
             HStack{
                 Image(systemName: "cart.fill")
-                    .resizable()
-                    .scaledToFit()
-                    .shadow(radius: 10)
-                    .padding(.vertical)
-                    .foregroundStyle(Color(UIColor.label))
-
-                    .padding(.leading)
-                    .padding(.trailing,8)
                 Text("Cart")
-                    .font(
-                        .system(
-                            size: (200*1.333)/11,
-                            weight: .semibold,
-                            design: .rounded
-                        )
-                    )
-                    .foregroundStyle(Color(UIColor.label))
-                    .padding(.trailing,20)
-                    .shadow(radius: 10)
             }
+            .labelStyle(26)
         }
-        
-        .frame(maxWidth: 200/1.25,maxHeight: (200*1.618)/5)
-        .glassEffect(
-            .clear.interactive().tint(Color.green.opacity(0.5)),
-            in: .rect(cornerRadius: 200/7)
-        )
+        .backgroundStyle(width: 134,height: 61)
+    }
+}
+
+struct LabelStyle: ViewModifier {
+    let size: CGFloat
+    func body(content: Content) -> some View {
+        content
+            .font(
+                .system(
+                    size: size,
+                    weight: .regular,
+                    design: .rounded
+                )
+            )
+            .foregroundStyle(Color(UIColor.label))
+            .shadow(radius: 10)
+    }
+}
+extension View {
+    func labelStyle(_ size: CGFloat) -> some View {
+        modifier(LabelStyle(size: size))
+    }
+}
+
+struct BackgroundStyle: ViewModifier {
+    let width: CGFloat
+    let height: CGFloat
+    
+    func body(content: Content) -> some View {
+        content
+            .frame(maxWidth: width,maxHeight: height)
+            .glassEffect(
+                .regular
+                    .interactive()
+                    .tint(Color.green.opacity(0.5)), in: .containerRelative)
+    }
+}
+extension View {
+    func backgroundStyle(width: CGFloat, height: CGFloat) -> some View {
+        modifier(BackgroundStyle(width: width, height: height))
     }
 }
 
