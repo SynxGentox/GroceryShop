@@ -158,6 +158,11 @@ class GroceryStore {
         cart[item.id] != nil
     }
     
+    func totalPerItem(item: GroceryItem) -> Int{
+        let sum = quantity(of: item) * item.price
+        return sum
+    }
+    
 }
 
 struct ContentView: View {
@@ -171,10 +176,11 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.green.opacity(0.5)
+                LinearGradient(colors: [Color(#colorLiteral(red: 0.6839458942, green: 0.7091476917, blue: 0.1566197872, alpha: 1)),Color(UIColor.systemGray6).opacity(0.5), Color(UIColor.systemGray6).opacity(0.5), Color(UIColor.systemGray6).opacity(0.5)], startPoint: .top, endPoint: .bottom)
+                    
                     .ignoresSafeArea(edges: .all)
                 VStack {
-                    ScrollView{
+                    ScrollView {
                         LazyVGrid(columns: columns) {
                             ForEach(
                                 store.selectedCategory(cat: selectedCategory)
@@ -193,44 +199,28 @@ struct ContentView: View {
                         }
                         .padding(.horizontal,10)
                     }
-                    .scrollEdgeEffectStyle(.soft, for: .all)
+                    .scrollIndicators(.never)
+                    .scrollEdgeEffectStyle(.automatic, for: .all)
                 }
-                VStack{
                     VStack {
-                        if !isTapped {
-                            FilterBar(
-                                selectedCategory: $selectedCategory, filter: $isTapped
-                            )
-                            .contentShape(Capsule())
-                            .onTapGesture {
-                                withAnimation(.spring){
-                                    isTapped.toggle()
-                                }
-                            }
-                                
-                        } else {
-                            HStack{
-                                FilterBar(
-                                    selectedCategory: $selectedCategory, filter: $isTapped
-                                )
-                                .contentShape(Capsule())
-                                .onTapGesture {
-                                    withAnimation(.spring){
-                                        isTapped.toggle()
-                                        
-                                    }
-                                }
+                        FilterBar(
+                            selectedCategory: $selectedCategory, filter: $isTapped
+                        )
+                        .contentShape(Capsule())
+                        .padding(.horizontal)
+                        .onTapGesture {
+                            withAnimation(.spring){
+                                isTapped.toggle()
                             }
                         }
+                        Spacer()
                     }
-                    .frame(maxWidth: .infinity,alignment: .leading)
-                    Spacer()
-                    NavigationLink(destination: CartView()) {
-                        CartButton()
-                            .foregroundStyle(Color(UIColor.label))
-                    }
+                    .frame(maxWidth: .infinity,maxHeight: .infinity,alignment: .trailing)
+                
+                NavigationLink(destination: CartView()) {
+                    CartButton()
                 }
-                .padding(.horizontal)
+                .frame(maxWidth: .infinity,maxHeight: .infinity,alignment: .bottom)
             }
             .toolbar {
                 Image(systemName: "person.crop.circle.fill")
@@ -238,6 +228,8 @@ struct ContentView: View {
                     .scaledToFit()
                     .frame(width: 26, height: 26)
             }
+            .navigationTitle("Good Morning ☀️")
+            .navigationSubtitle("Wanna have Something?")
         }
     }
 }
@@ -248,50 +240,65 @@ struct ItemCard: View {
     let imageName: String
     let name: String
     let price: Int
+    let brandGreen = Color(red: 0.6839, green: 0.7091, blue: 0.1566)
     
     var body: some View {
         ZStack{
             RoundedRectangle(cornerRadius: 27)
-                .fill(Color(UIColor.systemGray6))
+                .fill(brandGreen.opacity(0.4))
             VStack {
                 Image(systemName: "apple.logo")
                     .resizable()
                     .scaledToFit()
                     .frame(maxWidth: 200, maxHeight: 200)
-                    .foregroundStyle(.red)
-                    .shadow(radius: 17,x: 10,y: 10)
-                    .padding(.top, 17)
+                    .foregroundStyle(Color(UIColor.systemGray6))
+                    .padding(.top, 10)
                 
-                VStack(alignment: .leading){
-                    HStack {
-                        Button{
-                            store.removeFromCart(item: item)
-                        } label: {
-                            Image(systemName: "minus")
-                        }
-                        Text(store.quantity(of: item), format: .number)
-                        Button{
-                            store.addToCart(item: item)
-                        } label: {
-                            Image(systemName: "plus")
-                        }
-                    }
-                    .labelStyle(17)
-                    .padding(.horizontal, 24)
-                    
-                    HStack {
+                HStack {
+                    VStack(alignment: .leading) {
                         Text(name)
-                            .padding(.leading, 26)
-                        Spacer()
-                        Text(price, format: .number)
-                            .padding(.trailing,26)
+                        Text(price, format: .currency(code: "USD"))
                     }
                     .labelStyle(17)
-                    .padding(.bottom, 17)
+                    .padding(.leading, 18)
+                    
+                    Spacer()
+                }
+                .padding(.bottom, 10)
+            }
+        }
+        .overlay(alignment: .bottomTrailing) {
+            VStack(alignment: .trailing) {
+                
+                HStack{
+                    Button{
+                        store.removeFromCart(item: item)
+                    } label: {
+                        Image(systemName: "minus.circle.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: 26, maxHeight: 46)
+                            .foregroundStyle(Color(UIColor.label))
+                    }
+                    
+                    Text(store.quantity(of: item), format: .number)
+                        .labelStyle(20)
+                        
+                    Button{
+                        store.addToCart(item: item)
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: 26, maxHeight: 46)
+                            .foregroundStyle(Color(UIColor.label))
+                    }
                 }
             }
-            .frame(maxWidth: .infinity,maxHeight: 240)
+            .labelStyle(17)
+            .padding(.trailing, 10)
         }
+        .frame(maxWidth: .infinity,maxHeight: 260)
     }
 }
 
@@ -301,40 +308,41 @@ struct FilterBar: View {
     @Binding var filter: Bool
     
     var body: some View {
-        VStack{
-            HStack{
-                if !filter {
+        ZStack{
+            if !filter {
+                HStack{
                     Image(systemName: "slider.horizontal.3")
                     Text("Filter")
                 }
-                else {
-                    Image(systemName: "xmark")
-                }
+                .labelStyle(20)
+                .backgroundStyle(width: 115,height: 47)
             }
-            .labelStyle(20)
-            .backgroundStyle(width: 115,height: 47)
-            if filter {
-                Text("All")
-                    .labelStyle(20)
-                    .backgroundStyle(width: 115,height: 47)
-                    .onTapGesture {
-                        selectedCategory = nil
-                        withAnimation(.spring) {
-                                filter = false  // close filter panel after selection
-                            }
-                    }
-                
-                    
-                ForEach(Categories.allCases, id: \.self) { category in
-                    Text(category.rawValue)
+            else {
+                VStack{
+                    Image(systemName: "xmark")
                         .labelStyle(20)
                         .backgroundStyle(width: 115,height: 47)
+                            
+                    Text("All")
                         .onTapGesture {
-                            selectedCategory = category.rawValue
+                            selectedCategory = nil
                             withAnimation(.spring) {
+                                filter = false  // close filter panel after selection
+                            }
+                        }
+                        .labelStyle(20)
+                        .backgroundStyle(width: 115,height: 47)
+                    ForEach(Categories.allCases, id: \.self) { category in
+                        Text(category.rawValue)
+                            .onTapGesture {
+                                selectedCategory = category.rawValue
+                                withAnimation(.spring) {
                                     filter = false  // close filter panel after selection
                                 }
-                        }
+                            }
+                            .labelStyle(20)
+                            .backgroundStyle(width: 115,height: 47)
+                    }
                 }
             }
         }
@@ -363,12 +371,11 @@ struct LabelStyle: ViewModifier {
             .font(
                 .system(
                     size: size,
-                    weight: .regular,
+                    weight: .medium,
                     design: .rounded
                 )
             )
             .foregroundStyle(Color(UIColor.label))
-            .shadow(radius: 10)
     }
 }
 extension View {
@@ -387,7 +394,9 @@ struct BackgroundStyle: ViewModifier {
             .glassEffect(
                 .regular
                     .interactive()
-                    .tint(Color.green.opacity(0.5)), in: .containerRelative)
+                    .tint(Color(UIColor.systemGray6).opacity(0.5)), in: .containerRelative)
+            .shadow(color: Color(UIColor.systemGray3).opacity(0.4), radius: 7, x: 0, y: 5)
+        
     }
 }
 extension View {
