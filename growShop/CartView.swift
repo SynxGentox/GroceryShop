@@ -9,20 +9,19 @@ import SwiftUI
 
 struct CartView: View {
     @Environment(GroceryStore.self) private var store
-    let brandGreen = Color(red: 0.6839, green: 0.7091, blue: 0.1566)
-    
     var body: some View {
         ZStack{
             LinearGradient(
                 colors: [
                     brandGreen,
-                    Color(UIColor.systemGray6).opacity(0.3),
-                    Color(UIColor.systemGray6).opacity(0.3),
-                    Color(UIColor.systemGray6).opacity(0.3)
+                    Color(UIColor.systemBackground),
+                    Color(UIColor.systemBackground),
+                    Color(UIColor.systemBackground)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
             )
+                
             .ignoresSafeArea(edges: .all)
             ScrollView {
                 VStack{
@@ -39,7 +38,7 @@ struct CartView: View {
                                 )
                             }
                     } else {
-                        Text("Nothing's Here  ):")
+                        Text("Nothing's Here  :(")
                             .labelStyle(36)
                             .padding(.top, 250)
                     }
@@ -61,27 +60,97 @@ struct CartView: View {
 }
 
 struct PurchaseButton: View {
-    let brandGreen = Color(red: 0.6839, green: 0.7091, blue: 0.1566)
+    @Environment(GroceryStore.self) private var store
+    
     var body: some View {
         ZStack{
-            Capsule()
-                .fill(.clear)
-            Text("Check Out")
-                .labelStyle(26)
+            if !store.cart.isEmpty {
+                VStack{
+                    Spacer()
+                    RoundedRectangle(cornerRadius: 60, style: .circular)
+                        .fill(Color(UIColor.systemGray6).opacity(0.9))
+                        .shadow(
+                            color: .black.opacity(0.1),
+                            radius: 7,
+                            x: 0,
+                            y: -7
+                        )
+                        .frame(maxWidth: .infinity, maxHeight: 200)
+                        .overlay(alignment: .topLeading) {
+                            HStack{
+                                VStack(alignment: .listRowSeparatorLeading){
+                                    Text("Address:")
+                                        .labelStyle(20)
+                                    Text("House No. 3, ABC Colony, ABC City ")
+                                        .labelStyle(17)
+                                }
+                                .frame(
+                                    maxWidth: .infinity,
+                                    maxHeight: 65,
+                                    alignment: .topLeading
+                                )
+                                .padding(.leading, 37)
+                                Spacer()
+                                VStack(alignment: .listRowSeparatorTrailing){
+                                    Text("Cart Total")
+                                    Text(
+                                        store.cartTotal,
+                                        format: .currency(code: "USD")
+                                    )
+                                    .foregroundStyle(brandGreen)
+                                }
+                                .labelStyle(20)
+                                .padding(.trailing, 37)
+                                .padding(.leading, 17)
+                            }
+                            .frame(
+                                maxWidth: .infinity,
+                                maxHeight: 80,
+                                alignment: .top
+                            )
+                            .padding(.top, 26)
+                        }
+                }
+            } else {
+                
+                VStack{
+                    Spacer()
+                    RoundedRectangle(cornerRadius: 60, style: .continuous)
+                        .fill(Color(UIColor.systemGray6).opacity(0.9))
+                        .shadow(
+                            color: .black.opacity(0.1),
+                            radius: 7,
+                            x: 0,
+                            y: -7
+                        )
+                        .frame(maxWidth: .infinity, maxHeight: 132)
+                }
+            }
+            
+            VStack{
+                Spacer()
+                Text(!store.cart.isEmpty ? "Check Out" : ":(")
+                    
+                    .frame(maxWidth: .infinity, maxHeight: 60)
+                    .glassEffect(
+                        .regular
+                            .interactive()
+                            .tint(brandGreen.opacity(0.8)), in:
+                                .rect(cornerRadius: 27, style: .continuous))
+                    
+            }
+            .labelStyle(26)
+            .frame(alignment: .bottom)
+            .shadow(
+                color: Color.black.opacity(0.1),
+                radius: 7,
+                x: 15,
+                y: 25
+            )
+            .padding(.bottom, 36)
+            .padding(.horizontal, 37)
         }
-        .frame(maxWidth: .infinity, maxHeight: 61)
-        .glassEffect(
-            .regular
-                .interactive()
-                .tint(brandGreen.opacity(0.7)), in: .capsule)
-        .shadow(
-            color: Color(UIColor.systemGray4).opacity(0.7),
-            radius: 7,
-            x: 15,
-            y: 25
-        )
-        //        .shadow(Color(UIColor.systemBackground) == Color.black ??  Color(UIColor.systemGray4).opacity(0.7), radius: 7, x: 15, y: 25 : .opacity(0) )
-        .padding(.horizontal, 38)
+        .ignoresSafeArea()
     }
 }
 
@@ -94,37 +163,40 @@ struct ListItemCard: View {
     let imageName: String
     var body: some View {
         ZStack{
-            Rectangle()
-                .fill(Color(UIColor.systemGray4).opacity(0.3))
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .fill(Color(UIColor.systemBackground).opacity(0.37))
                 .frame(maxWidth: .infinity, maxHeight: 200)
-                
+                .shadow(color: .black.opacity(0.24), radius: 7, x: 0, y: 10)
             HStack{
                 Image(systemName: "apple.logo")
                     .resizable()
                     .scaledToFit()
                     .frame(maxWidth: 88, maxHeight: 88, alignment: .leading)
                     .foregroundStyle(.black)
-                    .background(.white)
+                    .padding(.leading, 14)
+                    .padding(.vertical, 7)
                 VStack(alignment: .leading) {
                     Text(name)
-                        .labelStyle(23)
+                        .labelStyle(20)
                         .frame(
                             maxWidth: .infinity,
                             maxHeight: 53,
                             alignment: .topLeading
                         )
-                        .padding(.top, 3)
+                        .padding(.top, 7)
                     Text("In Stock")
                         .labelStyle(17)
                     HStack{
                         Text("Quality")
                         Image(systemName: "checkmark.seal.fill")
+                            .foregroundStyle(Color(UIColor.label))
                     }
                     .labelStyle(13)
                     Spacer()
                 }
             }
         }
+        .padding(.horizontal, 7)
         .frame(maxWidth: .infinity, maxHeight: 130)
         
         .overlay(alignment: .bottomTrailing) {
@@ -144,12 +216,13 @@ struct ListItemCard: View {
                             .resizable()
                             .scaledToFit()
                             .frame(maxWidth: 30, maxHeight: 44)
-                            .foregroundStyle(Color(UIColor.label))
+                            .foregroundStyle(Color.primary)
                     }
                     .padding(.trailing, 7)
                     
                     Text(store.quantity(of: item), format: .number)
-                        
+                        .labelStyle(17)
+                    
                     Button{
                         store.addToCart(item: item)
                     } label: {
@@ -157,14 +230,15 @@ struct ListItemCard: View {
                             .resizable()
                             .scaledToFit()
                             .frame(maxWidth: 30, maxHeight: 44)
-                            .foregroundStyle(Color(UIColor.label))
+                            .foregroundStyle(Color.primary)
                     }
                     .padding(.leading, 7)
                 }
             }
             .labelStyle(20)
-            .padding(.trailing, 10)
+            .padding(.trailing, 14)
         }
+        
     }
 }
 

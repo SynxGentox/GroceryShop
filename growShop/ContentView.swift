@@ -14,6 +14,10 @@ import Observation
 //  Created by Aryan Verma on 13/03/26.
 //
 
+
+let brandGreen = Color(red: 0.6839, green: 0.7091, blue: 0.1566)
+
+
 struct GroceryItem: Identifiable {
     var id: UUID = UUID()
     var name: String
@@ -163,6 +167,12 @@ class GroceryStore {
         return sum
     }
     
+    var cartTotal: Double {
+        Double(
+            allItems.filter{isInCart($0)
+            }.reduce(0) { $0 + totalPerItem(item: $1) })
+    }
+    
 }
 
 struct ContentView: View {
@@ -176,9 +186,18 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LinearGradient(colors: [Color(#colorLiteral(red: 0.6839458942, green: 0.7091476917, blue: 0.1566197872, alpha: 1)),Color(UIColor.systemGray6).opacity(0.5), Color(UIColor.systemGray6).opacity(0.5), Color(UIColor.systemGray6).opacity(0.5)], startPoint: .top, endPoint: .bottom)
+                LinearGradient(
+                    colors: [
+                        brandGreen,
+                        Color(UIColor.systemBackground),
+                        Color(UIColor.systemBackground),
+                        Color(UIColor.systemBackground)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
                     
-                    .ignoresSafeArea(edges: .all)
+                .ignoresSafeArea(edges: .all)
                 VStack {
                     ScrollView {
                         LazyVGrid(columns: columns) {
@@ -186,7 +205,7 @@ struct ContentView: View {
                                 store.selectedCategory(cat: selectedCategory)
                             ) { item in
                                 NavigationLink(
-                                    destination: ItemDetailView()
+                                    destination: ItemDetailView(item: item)
                                 ) {
                                     ItemCard(
                                         item: item,
@@ -202,25 +221,33 @@ struct ContentView: View {
                     .scrollIndicators(.never)
                     .scrollEdgeEffectStyle(.automatic, for: .all)
                 }
-                    VStack {
-                        FilterBar(
-                            selectedCategory: $selectedCategory, filter: $isTapped
-                        )
-                        .contentShape(Capsule())
-                        .padding(.horizontal)
-                        .onTapGesture {
-                            withAnimation(.spring){
-                                isTapped.toggle()
-                            }
+                VStack {
+                    FilterBar(
+                        selectedCategory: $selectedCategory, filter: $isTapped
+                    )
+                    .contentShape(Capsule())
+                    .padding(.horizontal)
+                    .onTapGesture {
+                        withAnimation(.spring){
+                            isTapped.toggle()
                         }
-                        Spacer()
                     }
-                    .frame(maxWidth: .infinity,maxHeight: .infinity,alignment: .trailing)
+                    Spacer()
+                }
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity,
+                    alignment: .trailing
+                )
                 
                 NavigationLink(destination: CartView()) {
                     CartButton()
                 }
-                .frame(maxWidth: .infinity,maxHeight: .infinity,alignment: .bottom)
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity,
+                    alignment: .bottom
+                )
             }
             .toolbar {
                 Image(systemName: "person.crop.circle.fill")
@@ -240,7 +267,6 @@ struct ItemCard: View {
     let imageName: String
     let name: String
     let price: Int
-    let brandGreen = Color(red: 0.6839, green: 0.7091, blue: 0.1566)
     
     var body: some View {
         ZStack{
@@ -360,7 +386,7 @@ struct CartButton: View {
             }
             .labelStyle(26)
         }
-        .backgroundStyle(width: 134,height: 61)
+        .backgroundStyle(width: 134,height: 60)
     }
 }
 
@@ -394,8 +420,17 @@ struct BackgroundStyle: ViewModifier {
             .glassEffect(
                 .regular
                     .interactive()
-                    .tint(Color(UIColor.systemGray6).opacity(0.5)), in: .containerRelative)
-            .shadow(color: Color(UIColor.systemGray3).opacity(0.4), radius: 7, x: 0, y: 5)
+                    .tint(
+                        Color(UIColor.systemGray6).opacity(0.75)
+                    ),
+                in: .containerRelative
+            )
+            .shadow(
+                color: Color(UIColor.black).opacity(0.1),
+                radius: 7,
+                x: 5,
+                y: 7
+            )
         
     }
 }
