@@ -13,7 +13,7 @@ struct CartView: View {
         ZStack{
             LinearGradient(
                 colors: [
-                    brandGreen,
+                    brandGreen.opacity(0.6),
                     Color(UIColor.systemBackground),
                     Color(UIColor.systemBackground),
                     Color(UIColor.systemBackground)
@@ -61,14 +61,15 @@ struct CartView: View {
 
 struct PurchaseButton: View {
     @Environment(GroceryStore.self) private var store
+    @State private var isPresented: Bool = false
     
     var body: some View {
         ZStack{
             if !store.cart.isEmpty {
                 VStack{
                     Spacer()
-                    RoundedRectangle(cornerRadius: 60, style: .circular)
-                        .fill(Color(UIColor.systemGray6).opacity(0.9))
+                    ConcentricRectangle(corners: .concentric, isUniform: true)
+                        .fill(Color(UIColor.systemGray6))
                         .shadow(
                             color: .black.opacity(0.1),
                             radius: 7,
@@ -97,7 +98,7 @@ struct PurchaseButton: View {
                                         store.cartTotal,
                                         format: .currency(code: "USD")
                                     )
-                                    .foregroundStyle(brandGreen)
+                                    .foregroundStyle(.primary)
                                 }
                                 .labelStyle(20)
                                 .padding(.trailing, 37)
@@ -116,14 +117,14 @@ struct PurchaseButton: View {
                 VStack{
                     Spacer()
                     RoundedRectangle(cornerRadius: 60, style: .continuous)
-                        .fill(Color(UIColor.systemGray6).opacity(0.9))
+                        .fill(Color(UIColor.systemGray6))
                         .shadow(
                             color: .black.opacity(0.1),
                             radius: 7,
                             x: 0,
                             y: -7
                         )
-                        .frame(maxWidth: .infinity, maxHeight: 132)
+                        .frame(maxWidth: .infinity, maxHeight: 134)
                 }
             }
             
@@ -133,10 +134,8 @@ struct PurchaseButton: View {
                     
                     .frame(maxWidth: .infinity, maxHeight: 60)
                     .glassEffect(
-                        .regular
-                            .interactive()
-                            .tint(brandGreen.opacity(0.8)), in:
-                                .rect(cornerRadius: 27, style: .continuous))
+                        .clear
+                            .interactive().tint(brandGreen.opacity(0.4)))
                     
             }
             .labelStyle(26)
@@ -147,8 +146,18 @@ struct PurchaseButton: View {
                 x: 15,
                 y: 25
             )
-            .padding(.bottom, 36)
-            .padding(.horizontal, 37)
+            .padding(.bottom, 34)
+            .padding(.horizontal, 38)
+            .onTapGesture {
+                isPresented.toggle()
+            }
+            .alert("Order Placed",isPresented: $isPresented) {
+            } message: {
+                Image(systemName: "checkmark.circle.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .foregroundStyle(Color.green)
+            }
         }
         .ignoresSafeArea()
     }
@@ -164,15 +173,15 @@ struct ListItemCard: View {
     var body: some View {
         ZStack{
             RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .fill(Color(UIColor.systemBackground).opacity(0.37))
+                .fill(Color(UIColor.systemGray6))
                 .frame(maxWidth: .infinity, maxHeight: 200)
-                .shadow(color: .black.opacity(0.24), radius: 7, x: 0, y: 10)
+                .shadow(color: .black.opacity(0.1), radius: 7)
             HStack{
                 Image(systemName: "apple.logo")
                     .resizable()
                     .scaledToFit()
                     .frame(maxWidth: 88, maxHeight: 88, alignment: .leading)
-                    .foregroundStyle(.black)
+                    .foregroundStyle(brandGreen.opacity(0.6))
                     .padding(.leading, 14)
                     .padding(.vertical, 7)
                 VStack(alignment: .leading) {

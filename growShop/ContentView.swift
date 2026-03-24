@@ -188,7 +188,7 @@ struct ContentView: View {
             ZStack {
                 LinearGradient(
                     colors: [
-                        brandGreen,
+                        brandGreen.opacity(0.6),
                         Color(UIColor.systemBackground),
                         Color(UIColor.systemBackground),
                         Color(UIColor.systemBackground)
@@ -271,13 +271,13 @@ struct ItemCard: View {
     var body: some View {
         ZStack{
             RoundedRectangle(cornerRadius: 27)
-                .fill(brandGreen.opacity(0.4))
+                .fill(Color(UIColor.systemGray6))
             VStack {
                 Image(systemName: "apple.logo")
                     .resizable()
                     .scaledToFit()
                     .frame(maxWidth: 200, maxHeight: 200)
-                    .foregroundStyle(Color(UIColor.systemGray6))
+                    .foregroundStyle(brandGreen.opacity(0.6))
                     .padding(.top, 10)
                 
                 HStack {
@@ -421,7 +421,7 @@ struct BackgroundStyle: ViewModifier {
                 .regular
                     .interactive()
                     .tint(
-                        Color(UIColor.systemGray6).opacity(0.75)
+                        brandGreen.opacity(0.4)
                     ),
                 in: .containerRelative
             )

@@ -14,7 +14,7 @@ struct ItemDetailView: View {
         ZStack{
             LinearGradient(
                 colors: [
-                    brandGreen,
+                    brandGreen.opacity(0.6),
                     Color(UIColor.systemBackground),
                     Color(UIColor.systemBackground),
                     Color(UIColor.systemBackground)
@@ -62,7 +62,7 @@ struct ItemDetailView: View {
                     .glassEffect(
                         .regular
                             .interactive()
-                            .tint(brandGreen.opacity(0.8)), in:
+                            .tint(brandGreen.opacity(0.3)), in:
                                 .rect(cornerRadius: 27, style: .continuous))
                     .onTapGesture {
                         store.addToCart(item: item)
@@ -77,7 +77,7 @@ struct ItemDetailView: View {
                 x: 15,
                 y: 25
             )
-            .padding(.horizontal, 37)
+            .padding(.horizontal, 38)
         }
         .navigationTitle(item.name)
         .toolbar {
