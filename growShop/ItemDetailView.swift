@@ -27,7 +27,7 @@ struct ItemDetailView: View {
             ScrollView(.vertical, showsIndicators: false){
                 VStack{
                     Image(
-                        systemName: "square"
+                        systemName: "apple.logo"
                     )     // replace with item.imageName
                     .resizable()
                     .scaledToFit()

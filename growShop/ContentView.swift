@@ -277,7 +277,7 @@ struct ItemCard: View {
                     .resizable()
                     .scaledToFit()
                     .frame(maxWidth: 200, maxHeight: 200)
-                    .foregroundStyle(brandGreen.opacity(0.6))
+                    .foregroundStyle(.black.opacity(0.6))
                     .padding(.top, 10)
                 
                 HStack {
